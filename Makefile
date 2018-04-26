@@ -15,7 +15,7 @@ p4:
 	g++ Part\ 4/p4.cpp -o p4 && ./p4
 
 zip:
-	zip submission.zip -9 -xi Part*/*
+	zip submission.zip -9 -xi Part*/* Makefile
 	du -b submission.zip
 	unzip -t submission.zip
 
