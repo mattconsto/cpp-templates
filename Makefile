@@ -1,4 +1,4 @@
-.PHONY: all p1 p2 p3 p4 zip clean
+.PHONY: all p1 p2 p3 p4 zip clean todo
 
 all: clean p1 p2 p3 p4 zip
 
@@ -22,3 +22,6 @@ zip:
 clean:
 	rm -f *.exe
 	rm -f submission.zip
+
+todo:
+	grep -ir --exclude="Makefile" "@Todo" .
