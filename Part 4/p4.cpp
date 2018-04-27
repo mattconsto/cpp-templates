@@ -73,7 +73,6 @@ int main() {
 
 	// Array Example with IntDecl
 	// @TODO: I think the spec is faulty, how can I pass one number and get a valid answer?
-	// @TODO: For some reason sizeof(minimum_number_datatype) returns 1!!!
 	typedef IntDecl<BOUNDS<f>::u>::RET minimum_number_datatype;
 
 	number inputs[][3] = {{0, 0, 0}, {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 0, 0}, {0, 10, 10}, {-1, -2, -3}};
@@ -94,7 +93,7 @@ int main() {
 	// Print
 	for(int i = 0; i < N; i++) {
 		if(!exceptions[i]) {
-			std::cout << "f(" << int_array_to_string(inputs[i], ARRAY_SIZE(inputs[i]), ",") << ") = " << outputs[i] << "\n";
+			std::cout << "f(" << int_array_to_string(inputs[i], ARRAY_SIZE(inputs[i]), ",") << ") = " << (long long int) outputs[i] << "\n";
 		} else {
 			std::cout << "f(" << int_array_to_string(inputs[i], ARRAY_SIZE(inputs[i]), ",") << ") threw an exception!\n";
 		}

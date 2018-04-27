@@ -37,6 +37,7 @@ template <bool Cond, class Then, class Else> struct If {typedef Then RET;};
 template <class Then, class Else> struct If<false, Then, Else> {typedef Else RET;};
 
 // Calculates the smallest primitive type to represent a value
+// long long int is guaranteed to be bigger than anything that will be passed to this template
 template<long long int N=std::numeric_limits<long long int>::max()> struct IntDecl {
 	// typename and ::RET are very important, otherwise this will not work!
 	typedef typename If<N >=0 && N <= 255, unsigned char,
