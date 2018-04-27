@@ -10,7 +10,22 @@
 #ifndef MetaProgrammingP4_h
 #define MetaProgrammingP4_h
 
+// Get the size of an array
+#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
+
 typedef int number; // The datatype used.
+
+// Convert an integer array to string using a joiner
+std::string int_array_to_string(int array[], int size, std::string joiner) {
+	std::string output = "";
+	for(int i = 0; i < size; i++) {
+		output += std::to_string(array[i]);
+		if(i < size-1) output += joiner; // Conditional
+	}
+	return output;
+}
+std::string int_array_to_string(int array[], int size) {return int_array_to_string(array, size, "");}
+
 
 // Templated Maths
 // @TODO: Why does L and U need to be stored in the variable and not in BOUNDS? Fix this!
@@ -24,7 +39,7 @@ template<class A, class B> struct Div {static inline number eval(number* i) {ret
 // Additional Maths Operators have been removed as they are not constexpr.
 
 // Bounds calculator
-template<typename> struct BOUNDS; // Declare BOUNDS as a templated struct
+template<class> struct BOUNDS; // Declare BOUNDS as a templated struct
 template<number P, number L, number U> struct BOUNDS<Var<P, L, U>> {static const number l = L; static const number u = U;};
 template<number N> struct BOUNDS<Lit<N>> {static const number l = N; static const number u = N;};
 template<class A, class B> struct BOUNDS<Add<A, B>> {static const number l = BOUNDS<A>::l + BOUNDS<B>::l; static const number u = BOUNDS<A>::u + BOUNDS<B>::u;};
@@ -40,11 +55,26 @@ template <class Then, class Else> struct If<false, Then, Else> {typedef Else RET
 // long long int is guaranteed to be bigger than anything that will be passed to this template
 template<long long int N=std::numeric_limits<long long int>::max()> struct IntDecl {
 	// typename and ::RET are very important, otherwise this will not work!
-	typedef typename If<N >=0 && N <= 255, unsigned char,
-		typename If<N >= 0 && N <= 65535, unsigned int,
-			typename If<N >= -32768 && N <= 32767, signed int, signed long int>::RET
+	typedef typename If<(N >=0 && N <= 255), unsigned char,
+		typename If<(N >= 0 && N <= 65535), unsigned int,
+			typename If<(N >= -32768 && N <= 32767), signed int, signed long int>::RET
 		>::RET>
 	::RET RET;
+};
+
+template<class f> struct IntBounded {
+	// Given a formula, get the type for the lower and upper bounds
+	private:
+	typedef typename IntDecl<BOUNDS<f>::l>::RET _LOWERTYPE;
+	typedef typename IntDecl<BOUNDS<f>::u>::RET _UPPERTYPE;
+	static const int _lowersize = sizeof(_LOWERTYPE);
+	static const int _uppersize = sizeof(_UPPERTYPE);
+
+	// Choose between the two types, falling back to signed long int if equal
+	public:
+	typedef typename If<(_lowersize > _uppersize), _LOWERTYPE,
+		typename If<(_uppersize > _lowersize), _UPPERTYPE, signed long int>::RET
+	>::RET RET;
 };
 
 #endif

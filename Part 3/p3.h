@@ -24,7 +24,7 @@ template<class A, class B> struct Div {static inline number eval(number* i) {ret
 // Additional Maths Operators have been removed as they are not constexpr.
 
 // Bounds calculator
-template<typename> struct BOUNDS; // Declare BOUNDS as a templated struct
+template<class> struct BOUNDS; // Declare BOUNDS as a templated struct
 template<number P, number L, number U> struct BOUNDS<Var<P, L, U>> {static const number l = L; static const number u = U;};
 template<number N> struct BOUNDS<Lit<N>> {static const number l = N; static const number u = N;};
 template<class A, class B> struct BOUNDS<Add<A, B>> {static const number l = BOUNDS<A>::l + BOUNDS<B>::l; static const number u = BOUNDS<A>::u + BOUNDS<B>::u;};
