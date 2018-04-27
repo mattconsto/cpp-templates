@@ -3,53 +3,82 @@
 // By Matthew Consterdine <mc21g14@soton.ac.uk>
 
 #include <iostream> // Required for console input and output
-#include <string> // Required for to_string
 #include <stdexcept> // Standard exceptions
 #include <limits> // Default values
 
 #ifndef MetaProgrammingP4_h
 #define MetaProgrammingP4_h
 
-// Get the size of an array
-#define ARRAY_SIZE(array) (sizeof array / sizeof array[0])
+typedef int number; // Define a custom number data type for easy changes
+#define NUM_MIN (std::numeric_limits<number>::min()) // For brevity
+#define NUM_MAX (std::numeric_limits<number>::max())
 
-typedef int number; // The datatype used.
+#define ARRAY_SIZE(array) (sizeof array / sizeof array[0]) // Macro to get size of a static array
 
-// Convert an integer array to string using a joiner
-std::string int_array_to_string(int array[], int size, std::string joiner) {
-	std::string output = "";
-	for(int i = 0; i < size; i++) {
-		output += std::to_string(array[i]);
-		if(i < size-1) output += joiner; // Conditional
-	}
-	return output;
-}
-std::string int_array_to_string(int array[], int size) {return int_array_to_string(array, size, "");}
+// BOUNDS template, defaults to [NUM_MIN, NUM_MAX]
+template<number L=NUM_MIN, number U=NUM_MAX> struct BOUNDS {
+	static const number l = L; static const number u = U;
+};
 
+// Multiple variable place-holder
+template<number P=0, class=void> struct Var; // Define template class
+template<number P> struct Var<P, void> {static inline number eval(number* i) {return i[P];};};//Void
+template<number P, number L, number U> struct Var<P, BOUNDS<L,U>> { // Bounded case
+	static inline number eval(number* i) {
+		if(i[P] < L || i[P] > U) throw std::out_of_range(std::to_string(i[P])); else return i[P];
+	};
+};
 
-// Templated Maths
-// @TODO: Why does L and U need to be stored in the variable and not in BOUNDS? Fix this!
-template<number P=0, number L=std::numeric_limits<number>::min(), number U=std::numeric_limits<number>::max()> struct Var {static inline number eval(number* i) {if(i[P] < L || i[P] > U) throw std::out_of_range(std::to_string(i[P])); else return i[P];};}; // A single variable
-template<number N=0> struct Lit {static inline number eval(number* i) {return N;};}; // An numbereger literal
+// Literal expression (i.e. number), defaults to 0
+template<number N=0> struct Lit {static inline number eval(number* i) {return N;};};
+
 // Addition, Subtraction, Multiplication, and Division binary operators
-template<class A, class B> struct Add {static inline number eval(number* i) {return A::eval(i) + B::eval(i);};};
-template<class A, class B> struct Sub {static inline number eval(number* i) {return A::eval(i) - B::eval(i);};};
-template<class A, class B> struct Mul {static inline number eval(number* i) {return A::eval(i) * B::eval(i);};};
-template<class A, class B> struct Div {static inline number eval(number* i) {return A::eval(i) / B::eval(i);};};
-// Additional Maths Operators have been removed as they are not constexpr.
+template<class A, class B> struct Add {
+	static inline number eval(number* i) {return A::eval(i) + B::eval(i);};
+};
+template<class A, class B> struct Sub {
+	static inline number eval(number* i) {return A::eval(i) - B::eval(i);};
+};
+template<class A, class B> struct Mul {
+	static inline number eval(number* i) {return A::eval(i) * B::eval(i);};
+};
+template<class A, class B> struct Div {
+	static inline number eval(number* i) {return A::eval(i) / B::eval(i);};
+};
 
-// Bounds calculator
-template<class> struct BOUNDS; // Declare BOUNDS as a templated struct
-template<number P, number L, number U> struct BOUNDS<Var<P, L, U>> {static const number l = L; static const number u = U;};
-template<number N> struct BOUNDS<Lit<N>> {static const number l = N; static const number u = N;};
-template<class A, class B> struct BOUNDS<Add<A, B>> {static const number l = BOUNDS<A>::l + BOUNDS<B>::l; static const number u = BOUNDS<A>::u + BOUNDS<B>::u;};
-template<class A, class B> struct BOUNDS<Sub<A, B>> {static const number l = BOUNDS<A>::l - BOUNDS<B>::u; static const number u = BOUNDS<A>::u - BOUNDS<B>::l;};
-template<class A, class B> struct BOUNDS<Mul<A, B>> {static const number l = BOUNDS<A>::l * BOUNDS<B>::l; static const number u = BOUNDS<A>::u * BOUNDS<B>::u;};
-template<class A, class B> struct BOUNDS<Div<A, B>> {static const number l = BOUNDS<A>::l / BOUNDS<B>::u; static const number u = BOUNDS<A>::u / BOUNDS<B>::l;};
+// Bounds finder template
+template<class> struct FIND_BOUNDS; // Declare FIND_BOUNDS template class
+template<number P> struct FIND_BOUNDS<Var<P, void>> { // An unbound variable can represent any value
+static const number l = NUM_MIN; static const number u = NUM_MAX;
+};
+template<number P, number L, number U> struct FIND_BOUNDS<Var<P, BOUNDS<L, U>>> { // Bound variable
+	static const number l = L; static const number u = U;
+};
+template<number N> struct FIND_BOUNDS<Lit<N>> { // Literals are constant
+	static const number l = N; static const number u = N;
+};
 
-// Conditional typedef
+// Bounds finder Addition, Subtraction, Multiplication, and Division operations
+template<class A, class B> struct FIND_BOUNDS<Add<A, B>> {
+	static const number l = FIND_BOUNDS<A>::l + FIND_BOUNDS<B>::l;
+	static const number u = FIND_BOUNDS<A>::u + FIND_BOUNDS<B>::u;
+};
+template<class A, class B> struct FIND_BOUNDS<Sub<A, B>> {
+	static const number l = FIND_BOUNDS<A>::l - FIND_BOUNDS<B>::u;
+	static const number u = FIND_BOUNDS<A>::u - FIND_BOUNDS<B>::l;
+};
+template<class A, class B> struct FIND_BOUNDS<Mul<A, B>> {
+	static const number l = FIND_BOUNDS<A>::l * FIND_BOUNDS<B>::l;
+	static const number u = FIND_BOUNDS<A>::u * FIND_BOUNDS<B>::u;
+};
+template<class A, class B> struct FIND_BOUNDS<Div<A, B>> {
+	static const number l = FIND_BOUNDS<A>::l / FIND_BOUNDS<B>::u;
+	static const number u = FIND_BOUNDS<A>::u / FIND_BOUNDS<B>::l;
+};
+
+// Conditional If template typedef, building blocks for later on
 template <bool Cond, class Then, class Else> struct If {typedef Then RET;};
-template <class Then, class Else> struct If<false, Then, Else> {typedef Else RET;};
+template <class Then, class Else> struct If<false, Then, Else> {typedef Else RET;}; // Specialise!
 
 // Calculates the smallest primitive type to represent a value
 // long long int is guaranteed to be bigger than anything that will be passed to this template
@@ -57,24 +86,22 @@ template<long long int N=std::numeric_limits<long long int>::max()> struct IntDe
 	// typename and ::RET are very important, otherwise this will not work!
 	typedef typename If<(N >=0 && N <= 255), unsigned char,
 		typename If<(N >= 0 && N <= 65535), unsigned int,
-			typename If<(N >= -32768 && N <= 32767), signed int, signed long int>::RET
-		>::RET>
-	::RET RET;
+			typename If<(N >= -32768 && N <= 32767), signed int, signed long int>::RET>::RET>::RET RET;
 };
 
+// Given a formula, get the type for the lower and upper bounds
 template<class f> struct IntBounded {
-	// Given a formula, get the type for the lower and upper bounds
 	private:
-	typedef typename IntDecl<BOUNDS<f>::l>::RET _LOWERTYPE;
-	typedef typename IntDecl<BOUNDS<f>::u>::RET _UPPERTYPE;
+	// Cache for performance, and save for readability
+	typedef typename IntDecl<FIND_BOUNDS<f>::l>::RET _LOWERTYPE;
+	typedef typename IntDecl<FIND_BOUNDS<f>::u>::RET _UPPERTYPE;
 	static const int _lowersize = sizeof(_LOWERTYPE);
 	static const int _uppersize = sizeof(_UPPERTYPE);
 
 	// Choose between the two types, falling back to signed long int if equal
 	public:
 	typedef typename If<(_lowersize > _uppersize), _LOWERTYPE,
-		typename If<(_uppersize > _lowersize), _UPPERTYPE, signed long int>::RET
-	>::RET RET;
+		typename If<(_uppersize > _lowersize), _UPPERTYPE, signed long int>::RET>::RET RET;
 };
 
 #endif
