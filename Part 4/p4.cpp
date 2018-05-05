@@ -10,7 +10,7 @@ int main() {
 	// Array Example with IntDecl
 	std::cout << "f(x) = x_{0,4} + (y_{0,5} - 2)*(z_{0,6} - 3)\n"; // The expression to be evaluated
 	typedef Add<Var<0, BOUNDS<0,4>>, Mul<Sub<Var<1, BOUNDS<0,5>>, Lit<2>>, Sub<Var<2, BOUNDS<0,6>>, Lit<3>>>> f; // Build as f
-	std::cout << FIND_BOUNDS<f>::l << " <= f(x,y,z) <= " << FIND_BOUNDS<f>::u << "\n";
+	std::cout << f::l << " <= f(x,y,z) <= " << f::u << "\n";
 	
 	typedef IntBounded<f>::RET minimum_number_datatype;
 
@@ -49,7 +49,7 @@ int main() {
 	// Example Two
 	std::cout << "g(x) = x_{0,7} + (y_{0,7} - 2)*(x_{0,7} - 3)\n";
 	typedef Add<Var<0, BOUNDS<0,7>>, Mul<Sub<Var<1, BOUNDS<0,7>>, Lit<2>>, Sub<Var<0, BOUNDS<0,7>>, Lit<3>>>> g;
-	std::cout << FIND_BOUNDS<g>::l << " <= g(x,y) <= " << FIND_BOUNDS<g>::u << "\n";
+	std::cout << g::l << " <= g(x,y) <= " << g::u << "\n";
 	
 	try {
 		std::cout << "g(1,2) = " << g().eval(new number[2] {1,2}) << "\n";
@@ -62,7 +62,7 @@ int main() {
 	// Example Three
 	std::cout << "h(x) = x_{0,3}*4 + x_{0,3}/3 - 2\n";
 	typedef Add<Mul<Var<0, BOUNDS<0,3>>, Lit<4>>, Sub<Div<Var<>, Lit<3>>, Lit<2>>> h;
-	std::cout << FIND_BOUNDS<h>::l << " <= h(x) <= " << FIND_BOUNDS<h>::u << "\n";
+	std::cout << h::l << " <= h(x) <= " << h::u << "\n";
 
 	try {
 		std::cout << "h(1) = " << h().eval(new number[1] {1}) << "\n";

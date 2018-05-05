@@ -8,7 +8,7 @@ int main() {
 	// Example One
 	std::cout << "f(x) = (x_{0,5} + 3)*(x_{0,5} + 5)\n"; // The expression to be evaluated
 	typedef Mul<Add<Var<BOUNDS<0,5>>, Lit<3>>, Add<Var<BOUNDS<0,5>>, Lit<5>>> f; // Build as f
-	std::cout << FIND_BOUNDS<f>::l << " <= f(x) <= " << FIND_BOUNDS<f>::u << "\n";
+	std::cout << f::l << " <= f(x) <= " << f::u << "\n";
 	
 	// Catch exception if bounds are exceeded!
 	try {
@@ -22,7 +22,7 @@ int main() {
 	// Example Two
 	std::cout << "g(x) = x_{0,7} + (x_{0,7} - 2)*(x_{0,7} - 3)\n";
 	typedef Add<Var<BOUNDS<0,7>>, Mul<Sub<Var<BOUNDS<0,7>>, Lit<2>>, Sub<Var<BOUNDS<0,7>>, Lit<3>>>>g;
-	std::cout << FIND_BOUNDS<g>::l << " <= g(x) <= " << FIND_BOUNDS<g>::u << "\n";
+	std::cout << g::l << " <= g(x) <= " << g::u << "\n";
 	
 	try {
 		std::cout << "g(1) = " << g().eval(1) << "\n";
@@ -35,7 +35,7 @@ int main() {
 	// Example Three
 	std::cout << "h(x) = x_{0,3}*4 + x/3 - 2\n";
 	typedef Add<Mul<Var<BOUNDS<0,3>>, Lit<4>>, Sub<Div<Var<>, Lit<3>>, Lit<2>>> h;
-	std::cout << FIND_BOUNDS<h>::l << " <= h(x) <= " << FIND_BOUNDS<h>::u << "\n";
+	std::cout << h::l << " <= h(x) <= " << h::u << "\n";
 
 	try {
 		std::cout << "h(1) = " << h().eval(1) << "\n";

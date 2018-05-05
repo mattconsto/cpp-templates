@@ -22,58 +22,39 @@ template<number L=NUM_MIN, number U=NUM_MAX> struct BOUNDS {
 
 // Multiple variable place-holder
 template<number P=0, class=void> struct Var; // Define template class
-template<number P> struct Var<P, void> {static inline number eval(number* i) {return i[P];};};//Void
+template<number P> struct Var<P, void> { // Void case
+	static const number l = NUM_MIN; static const number u = NUM_MAX;
+	static inline number eval(number* i) {return i[P];};
+};
 template<number P, number L, number U> struct Var<P, BOUNDS<L,U>> { // Bounded case
+	static const number l = L; static const number u = U;
 	static inline number eval(number* i) {
 		if(i[P] < L || i[P] > U) throw std::out_of_range(std::to_string(i[P])); else return i[P];
 	};
 };
 
 // Literal expression (i.e. number), defaults to 0
-template<number N=0> struct Lit {static inline number eval(number* i) {return N;};};
+template<number N=0> struct Lit {
+	static const number l = N; static const number u = N;
+	static inline number eval(number* i) {return N;};
+};
 
 // Addition, Subtraction, Multiplication, and Division binary operators
 template<class A, class B> struct Add {
+	static const number l = A::l + B::l; static const number u = A::u + B::u;
 	static inline number eval(number* i) {return A::eval(i) + B::eval(i);};
 };
 template<class A, class B> struct Sub {
+	static const number l = A::l - B::u; static const number u = A::u - B::l;
 	static inline number eval(number* i) {return A::eval(i) - B::eval(i);};
 };
 template<class A, class B> struct Mul {
+	static const number l = A::l * B::l; static const number u = A::u * B::u;
 	static inline number eval(number* i) {return A::eval(i) * B::eval(i);};
 };
 template<class A, class B> struct Div {
+	static const number l = A::l / B::u; static const number u = A::u / B::l;
 	static inline number eval(number* i) {return A::eval(i) / B::eval(i);};
-};
-
-// Bounds finder template
-template<class> struct FIND_BOUNDS; // Declare FIND_BOUNDS template class
-template<number P> struct FIND_BOUNDS<Var<P, void>> { // An unbound variable can represent any value
-	static const number l = NUM_MIN; static const number u = NUM_MAX;
-};
-template<number P, number L, number U> struct FIND_BOUNDS<Var<P, BOUNDS<L, U>>> { // Bound variable
-	static const number l = L; static const number u = U;
-};
-template<number N> struct FIND_BOUNDS<Lit<N>> { // Literals are constant
-	static const number l = N; static const number u = N;
-};
-
-// Bounds finder Addition, Subtraction, Multiplication, and Division operations
-template<class A, class B> struct FIND_BOUNDS<Add<A, B>> {
-	static const number l = FIND_BOUNDS<A>::l + FIND_BOUNDS<B>::l;
-	static const number u = FIND_BOUNDS<A>::u + FIND_BOUNDS<B>::u;
-};
-template<class A, class B> struct FIND_BOUNDS<Sub<A, B>> {
-	static const number l = FIND_BOUNDS<A>::l - FIND_BOUNDS<B>::u;
-	static const number u = FIND_BOUNDS<A>::u - FIND_BOUNDS<B>::l;
-};
-template<class A, class B> struct FIND_BOUNDS<Mul<A, B>> {
-	static const number l = FIND_BOUNDS<A>::l * FIND_BOUNDS<B>::l;
-	static const number u = FIND_BOUNDS<A>::u * FIND_BOUNDS<B>::u;
-};
-template<class A, class B> struct FIND_BOUNDS<Div<A, B>> {
-	static const number l = FIND_BOUNDS<A>::l / FIND_BOUNDS<B>::u;
-	static const number u = FIND_BOUNDS<A>::u / FIND_BOUNDS<B>::l;
 };
 
 #endif
